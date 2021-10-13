@@ -1,3 +1,4 @@
-openpyxl
-mongo
-pandas
+openpyxl==3.0.9
+pymongo==3.12.0
+pandas==1.3.3
+dnspython==2.1.0
