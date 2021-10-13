@@ -6,7 +6,7 @@ import pandas as pd
 
 # LOADS WAREHOUSE
 # Initialize connection.
-cluster = "mongodb+srv://Tomai:Hz3ry40lNFPeio0P@warehouse.konbq.mongodb.net/Warehouses?retryWrites=True&w=majority"
+cluster = "mongodb+srv://Tomai:Hz3ry40lNFPeio0P@warehouse.konbq.mongodb.net/Warehouses?retryWrites=true&w=majority"
 client = MongoClient(cluster)#(**st.secrets["mongo"]) cannot make secrets.toml work!
 db = client.Warehouses
 stocklist = db.wilm
@@ -43,7 +43,7 @@ if task == task2:
     liststock = list(stocklist.find())
     for stockitem in liststock:
         if len(stockitem["batches"])>0:
-            st.markdown("---\n{} ({})  -  **{}**\n -\n EAN: {}".format(stockitem["name"],stockitem["SKU"],stockitem["shelf"],stockitem["EAN"]))
+            st.markdown("---\n{} ({})  -  **{:03}{}**\n -\n EAN: {}".format(stockitem["name"],stockitem["SKU"],stockitem["shelf"],stockitem["letter"],stockitem["EAN"]))
             for expdate in stockitem["batches"]:
                 st.info(("{} items expire on {}\n".format(stockitem["batches"][expdate],expdate)))
     
@@ -54,9 +54,9 @@ if task == task3:
     #Once scanned:
     if EAN != 0:
         #Find and print item
-        stock_item = stocklist.find_one({'EAN': EAN})
+        stockitem = stocklist.find_one({'EAN': EAN})
         st.markdown('---')
-        st.subheader("{} ({})  -  **{}**\n".format(stock_item["name"],stock_item["SKU"],stock_item["shelf"]))
+        st.subheader("{} ({})  -  **{:03}{}**\n".format(stockitem["name"],stockitem["SKU"],stockitem["shelf"],stockitem["letter"]))
         st.text('')
         #Update form:
         form = st.form(key='updatestock')
@@ -68,22 +68,22 @@ if task == task3:
         if submit: #only excecutes on rerun
             expdate = expdate.strftime("%Y.%m.%d")
             try:
-                stock_item['batches'][expdate] += amount
+                stockitem['batches'][expdate] += amount
             except:
-                stock_item['batches'][expdate] = amount
-            if stock_item['batches'][expdate] <= 0:
-                del stock_item['batches'][expdate]
-            stocklist.update_one({'EAN':EAN},{'$set':{'batches':stock_item['batches']}})
+                stockitem['batches'][expdate] = amount
+            if stockitem['batches'][expdate] <= 0:
+                del stockitem['batches'][expdate]
+            stocklist.update_one({'EAN':EAN},{'$set':{'batches':stockitem['batches']}})
             flag = False
-            for expdate in stock_item["batches"]:
-                st.info("{} items expire on {}\n".format(stock_item["batches"][expdate],expdate))
+            for expdate in stockitem["batches"]:
+                st.info("{} items expire on {}\n".format(stockitem["batches"][expdate],expdate))
                 flag = True
             if flag == False:
                 st.info("No items in backstock")
         else: #if no update is sent, prints stock anyway
             flag = False
-            for expdate in stock_item["batches"]:
-                st.info("{} items expire on {}\n".format(stock_item["batches"][expdate],expdate))
+            for expdate in stockitem["batches"]:
+                st.info("{} items expire on {}\n".format(stockitem["batches"][expdate],expdate))
                 flag = True
             if flag == False:
                 st.info("No items in backstock")
