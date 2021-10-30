@@ -116,10 +116,9 @@ if st.session_state.advenabled == True:
     if task == task4:
         option = st.sidebar.selectbox('Select field to correct',('Enter missing EANS','Add missing item','Edit existing item'))
         if option == 'Enter missing EANS':
-            st.button('Click to refresh')
             flag = False
             for shelfnumber in range(9,15):
-                st.markdown('### For Fridge {}:'.format(shelfnumber))
+                st.markdown('### Fridge {}:'.format(shelfnumber))
                 stockshelf = stocklist.find({'EAN':0,'shelf':shelfnumber})
                 for stockitem in stockshelf:
                     EAN = int('0'+st.text_input('Please enter EAN for {} on shelf {} with SKU {}'.format(stockitem['name'],stockitem['letter'],stockitem['SKU'])))
@@ -127,5 +126,78 @@ if st.session_state.advenabled == True:
                         stocklist.update_one({"_id" : stockitem["_id"] }, {"$set" : {"EAN" :EAN}})
                         st.markdown('Success!')
                     flag=True
+            for shelfnumber in range(79,86):
+                st.markdown('### Fridge {}:'.format(shelfnumber))
+                stockshelf = stocklist.find({'EAN':1,'shelf':shelfnumber})
+                for stockitem in stockshelf:
+                    EAN = int('0'+st.text_input('Please enter EAN for {} on shelf {} with SKU {}'.format(stockitem['name'],stockitem['letter'],stockitem['SKU'])))
+                    if EAN !=0:
+                        if EAN == 137:
+                            stocklist.delete_one({"_id" : stockitem["_id"] })
+                            print(f'deleted item with id {stockitem["_id"]}')
+                        else:
+                            stocklist.update_one({"_id" : stockitem["_id"] }, {"$set" : {"EAN" :EAN}})
+                        st.markdown('Success!')
+                    flag=True
             if flag == False:
                 st.markdown('### All items have EANS!')
+        if option == 'Add missing item':
+            EAN = int('0'+st.text_input('Please enter EAN and press Enter'))
+            SKU = int('0'+st.text_input('Please enter SKU and press Enter'))
+            name = ''+st.text_input('Please enter item name and press Enter')
+            shelf = int('0'+st.text_input('Please enter fridge number (e.g. 9, 13, 79) and press Enter'))
+            letter = ''+st.text_input('Please enter shelf (e.g. A, B, C) and press Enter')
+            #if EAN != 0 and SKU != 0 and shelf != 0 and letter != '':
+            st.markdown('Make sure everything is correct!')
+            confirm = st.button('Click to confirm')
+            if confirm:
+                stocklist.insert_one({'EAN':EAN, 'SKU':SKU, 'name':name,'shelf':shelf,'letter':letter})
+                st.info('Item has successfuly been added')
+        if option == 'Edit existing item':
+            st.sidebar.markdown('### Enter EAN or SKU')
+            EAN = int('0'+st.sidebar.text_input('Enter EAN and press Enter'))
+            SKU = int('0'+st.sidebar.text_input('Enter SKU and press Enter'))
+            st.markdown('This is not yet finished. Will not work.')
+            if EAN != 0:
+                stockitem = stocklist.find_one({'EAN':EAN})
+                try:
+                    st.markdown("{} ({})  -  **{:03}{}**\n".format(stockitem["name"],stockitem["SKU"],stockitem["shelf"],stockitem["letter"]))
+                    suboption = st.selectbox('Enter field to edit',('SKU','Name','Fridge number','Shelf letter'))
+                    if suboption == 'SKU':
+                        SKU = int('0'+st.text_input('Enter new SKU'))
+                        send = st.button('Click to change')
+                        if send:
+                            st.markdown('Success!')
+                    if suboption == 'Name':
+                        name = ''+st.text_input('Enter new name')
+                        send = st.button('Click to change')
+                        if send:
+                            st.markdown('Success!')
+                    if suboption == 'Fridge number':
+                        shelf = int('0'+st.text_input('Enter new fridge number'))
+                        send = st.button('Click to change')
+                        if send:
+                            st.markdown('Success!')
+                    if suboption == 'Shelf letter':
+                        letter = ''+st.text_input('Enter new shelf letter')
+                        send = st.button('Click to change')
+                        if send:
+                            st.markdown('Success!')
+                except:
+                    st.info("Item not found. Please add missing EAN or item.")
+    if task == task5:
+        load = st.button('Press to load')
+        letterlist = ['A','B','C','D','E','F','G','H','I']
+        if load:
+            for shelf in range(9,15):
+                st.markdown('### Fridge {}'.format(shelf))
+                for letter in letterlist:
+                    st.markdown('**Shelf {}**'.format(letter))
+                    for stockitem in stocklist.find({'shelf':shelf,'letter':letter}):
+                        st.markdown("{} ({})  -  EAN: {}\n".format(stockitem["name"],stockitem["SKU"],stockitem["EAN"]))
+            for shelf in range(79,86):
+                st.markdown('### Fridge {}'.format(shelf))
+                for letter in letterlist:
+                    st.markdown('**Shelf {}**'.format(letter))
+                    for stockitem in stocklist.find({'shelf':shelf,'letter':letter}):
+                        st.markdown("{} ({})  -  EAN: {}\n".format(stockitem["name"],stockitem["SKU"],stockitem["EAN"]))
