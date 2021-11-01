@@ -73,13 +73,19 @@ if task == task3 and st.session_state.advenabled == False:
         #Find and print item
         stockitem = stocklist.find_one({'EAN': EAN})
         st.markdown('---')
-        st.subheader("{} ({})  -  **{:03}{}**\n".format(stockitem["name"],stockitem["SKU"],stockitem["shelf"],stockitem["letter"]))
-        st.text('')
-        #Update form:
-        form = st.form(key='updatestock')
-        expdate = form.date_input('Enter expiration date')
-        amount = form.number_input('Enter inventory change (positive or negative)',step=1,format='%i')
-        submit = form.form_submit_button(label='Submit')
+        try:
+            st.subheader("{} ({})  -  **{:03}{}**\n".format(stockitem["name"],stockitem["SKU"],stockitem["shelf"],stockitem["letter"]))
+            st.text('')
+            #Update form:
+            form = st.form(key='updatestock')
+            expdate = form.date_input('Enter expiration date')
+            amount = form.number_input('Enter inventory change (positive or negative)',step=1,format='%i')
+            submit = form.form_submit_button(label='Submit')
+            exists = True
+        except TypeError:
+            st.markdown('Item is not in database. Please add missing EAN or item through advanced options.')
+            submit=False
+            exists = False
         
         #Save new warehouse
         if submit: #only excecutes on rerun
@@ -97,7 +103,7 @@ if task == task3 and st.session_state.advenabled == False:
                 flag = True
             if flag == False:
                 st.info("No items in backstock")
-        else: #if no update is sent, prints stock anyway
+        elif exists: #if no update is sent, prints stock anyway
             flag = False
             for expdate in stockitem["batches"]:
                 st.info("{} items expire on {}\n".format(stockitem["batches"][expdate],expdate))
