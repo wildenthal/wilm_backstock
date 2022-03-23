@@ -6,8 +6,7 @@ from pymongo import MongoClient
 
 # LOAD WAREHOUSE
 # initialize connection
-cluster = "mongodb+srv://Tomai:Hz3ry40lNFPeio0P@warehouse.konbq.mongodb.net/Warehouses?retryWrites=true&w=majority"
-client = MongoClient(cluster)#(**st.secrets["mongo"]) cannot make secrets.toml work!
+client = MongoClient(st.secrets["mongo"])
 db = client.Warehouses
 stocklist = db.wilm
 
@@ -60,7 +59,7 @@ if task == task1 and st.session_state.advenabled == False:
     #read uploaded file
     if newitemsraw is not None:
         newitems = pd.read_excel(newitemsraw)['SKU'] #loads only SKU data
-        matches = list(stocklist.find({'SKU': { '$in': list(newitems)}})) 
+        matches = list(stocklist.find({ "$and": [{'SKU': { '$in': list(newitems)}},{'batches': {"$ne" : {}}}]})) 
         if len(matches) == 0:
             st.info('All items must be taken to front.')
         else:
